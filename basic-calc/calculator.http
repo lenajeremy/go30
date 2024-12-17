@@ -1,0 +1,7 @@
+### GET request to example server
+GET http://localhost:8080/calculate?eq=log(57)
+###
+
+### GET request to example server
+GET http://localhost:8080/calculate?eq=90 / 9 * 8
+###

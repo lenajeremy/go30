@@ -29,6 +29,10 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 		'/': true,
 		'.': true,
 	}
+	var paren = map[rune]bool{
+		'(': true,
+		')': true,
+	}
 
 	for _, ch := range expression {
 		if !(In(digits, ch) || In(signs, ch)) {
@@ -42,7 +46,8 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 	var decimalPlaces int
 	var prevSign rune = '+'
 
-	for i, ch := range expression {
+	for i := 0; i < len(expression); i++ {
+		ch := rune(expression[i])
 		if In(digits, ch) {
 			chInt, _ := strconv.Atoi(string(ch))
 			if hasDecimal {
@@ -71,24 +76,46 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 					stack.Push(-curr)
 				} else if prevSign == '*' {
 					prev := stack.Pop()
-					stack.Push(curr * (*prev))
+					stack.Push(*prev * curr)
 				} else if prevSign == '/' {
+					fmt.Println(stack)
 					prev := stack.Pop()
-					stack.Push(curr / *prev)
+					stack.Push(*prev / curr)
 				}
 				curr = 0
 				prevSign = ch
 			}
-		} else {
-			continue
+		} else if ch == '(' {
+			open := 1
+			for open != 0 {
+				if expression[i] == '(' {
+
+				}
+				open += 1
+			}
 		}
+		// (3 + 5) * 3
 
 		if i == len(expression)-1 && curr > 0 {
-			stack.Push(curr)
+			fmt.Println(stack)
+			if prevSign == '+' {
+				stack.Push(curr)
+			} else if prevSign == '-' {
+				stack.Push(-curr)
+			} else if prevSign == '*' {
+				stack.Push(*stack.Pop() * curr)
+			} else {
+				stack.Push(*stack.Pop() / curr)
+			}
 		}
 	}
 
 	return stack, nil
+}
+
+func In[T comparable](m map[T]bool, v T) bool {
+	_, ok := m[v]
+	return ok
 }
 
 func NewParser() *Parser {
