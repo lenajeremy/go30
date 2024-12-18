@@ -79,7 +79,7 @@ HTTP SERVER
 ---------------
 MAIN CALCULATOR
 ---------------
-1. Adding support for parenthesis. So that parenthesis are considered valid characters.
+1. Adding support for parenthesis. So that parenthesis are considered valid characters (DONE✅)
 2. Adding support for slightly complex operators like "**" (power) and "%" (modulo).
 3. Add support for mathematical computations like sin(x), cos(x), tan(x)
    as well as custom operators like pow(x, y), sqrt(x), cbrt(x) and maybe nroot(x, n).

@@ -9,6 +9,10 @@ import (
 type Parser struct{}
 
 func (p *Parser) Parse(expression string) (Stack[float64], error) {
+	return parseStartEnd(expression, 0, len(expression)-1)
+}
+
+func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 	var stack Stack[float64]
 	var digits = map[rune]bool{
 		'1': true,
@@ -29,13 +33,14 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 		'/': true,
 		'.': true,
 	}
+
 	var paren = map[rune]bool{
 		'(': true,
 		')': true,
 	}
 
 	for _, ch := range expression {
-		if !(In(digits, ch) || In(signs, ch)) {
+		if !(In(digits, ch) || In(signs, ch) || In(paren, ch)) {
 			return stack, fmt.Errorf("invalid character: '%c'", ch)
 		}
 	}
@@ -44,9 +49,9 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 	var curr float64
 	var hasDecimal bool
 	var decimalPlaces int
-	var prevSign rune = '+'
+	var prevSign = '+'
 
-	for i := 0; i < len(expression); i++ {
+	for i := start; i <= end; i++ {
 		ch := rune(expression[i])
 		if In(digits, ch) {
 			chInt, _ := strconv.Atoi(string(ch))
@@ -66,51 +71,70 @@ func (p *Parser) Parse(expression string) (Stack[float64], error) {
 				hasDecimal = false
 				decimalPlaces = 0
 
-				if (ch == '*' || ch == '/') && curr == 0 {
-					return stack, fmt.Errorf("%s: multiplication/division should not operate on left value of zero", ErrInvalidInput.Error())
+				if (ch == '*' || ch == '/') && stack.Peek() == nil && curr == 0 {
+					return stack, fmt.Errorf("%s: invalid left value for division/multiplication operations", ErrInvalidInput.Error())
+				}
+				if curr != 0 {
+					updateStack(&stack, curr, prevSign)
+					curr = 0
 				}
 
-				if prevSign == '+' {
-					stack.Push(curr)
-				} else if prevSign == '-' {
-					stack.Push(-curr)
-				} else if prevSign == '*' {
-					prev := stack.Pop()
-					stack.Push(*prev * curr)
-				} else if prevSign == '/' {
-					fmt.Println(stack)
-					prev := stack.Pop()
-					stack.Push(*prev / curr)
-				}
-				curr = 0
 				prevSign = ch
 			}
 		} else if ch == '(' {
-			open := 1
-			for open != 0 {
-				if expression[i] == '(' {
-
+			open := 0
+			j := i
+		closingParenFinder:
+			for j <= end {
+				if expression[j] == '(' {
+					open += 1
+				} else if expression[j] == ')' {
+					open -= 1
 				}
-				open += 1
-			}
-		}
-		// (3 + 5) * 3
 
-		if i == len(expression)-1 && curr > 0 {
-			fmt.Println(stack)
-			if prevSign == '+' {
-				stack.Push(curr)
-			} else if prevSign == '-' {
-				stack.Push(-curr)
-			} else if prevSign == '*' {
-				stack.Push(*stack.Pop() * curr)
-			} else {
-				stack.Push(*stack.Pop() / curr)
+				if open == 0 {
+					res, err := parseStartEnd(expression, i+1, j-1)
+					if err != nil {
+						return stack, err
+					}
+
+					s := sum(res)
+					updateStack(&stack, s, prevSign)
+					i = j
+					break closingParenFinder
+				} else {
+					j += 1
+				}
 			}
+
+		} else if ch == ')' {
+			return stack, fmt.Errorf("%s: closing parenthesis found at index %d without an opening parenthesis", ErrInvalidInput.Error(), i)
+		}
+
+		if i == end && curr > 0 {
+			updateStack(&stack, curr, prevSign)
 		}
 	}
 
 	return stack, nil
+}
+
+func updateStack(stack *Stack[float64], curr float64, sign rune) {
+	if sign == '+' {
+		stack.Push(curr)
+	} else if sign == '-' {
+		stack.Push(-curr)
+	} else if sign == '*' {
+		last := stack.Pop()
+		if last != nil {
+			stack.Push(*last * curr)
+		}
+	} else {
+		last := stack.Pop()
+		if last != nil {
+			stack.Push(*last / curr)
+		}
+	}
 }
 
 func In[T comparable](m map[T]bool, v T) bool {
