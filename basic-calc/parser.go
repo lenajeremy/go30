@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -13,14 +14,14 @@ func NewParser() *Parser {
 	return new(Parser)
 }
 
-func (p *Parser) PurifyInput(original string) string {
+func (p *Parser) purifyInput(original string) string {
 	input := strings.Trim(original, "\n")               // remove the trailing newline character
 	input = strings.Join(strings.Split(input, " "), "") // remove whitespace characters
 	return input
 }
 
 func (p *Parser) Eval(expression string) (float64, error) {
-	expression = p.PurifyInput(expression)
+	expression = p.purifyInput(expression)
 	s, err := parseStartEnd(expression, 0, len(expression)-1)
 	if err != nil {
 		return 0, err
@@ -47,6 +48,7 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 		'-': true,
 		'*': true,
 		'/': true,
+		'%': true,
 		'.': true,
 	}
 
@@ -57,6 +59,7 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 
 	for _, ch := range expression {
 		if !(In(digits, ch) || In(signs, ch) || In(paren, ch)) {
+			errors.Join()
 			return stack, fmt.Errorf("invalid character: '%c'", ch)
 		}
 	}
@@ -146,10 +149,15 @@ func updateStack(stack *Stack[float64], curr float64, sign rune) {
 		if last != nil {
 			stack.Push(*last * curr)
 		}
-	} else {
+	} else if sign == '/' {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(*last / curr)
+		}
+	} else if sign == '%' {
+		last := stack.Pop()
+		if last != nil {
+			stack.Push(math.Mod(*last, curr))
 		}
 	}
 }

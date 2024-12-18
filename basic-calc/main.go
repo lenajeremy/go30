@@ -37,9 +37,7 @@ func main() {
 			e.Encode(res)
 		}
 
-		input := p.PurifyInput(originalInput)
-
-		if value, err := p.Eval(input); err != nil {
+		if value, err := p.Eval(originalInput); err != nil {
 			status = 400
 			res := httpresponse{Err: err.Error(), Status: status, Data: nil}
 			e.Encode(res)

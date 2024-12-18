@@ -16,9 +16,9 @@ func (st subtest) run(t *testing.T) {
 	res, err := p.Eval(st.input)
 	if err != nil {
 		if !st.shouldFail {
-			t.Errorf("%s failed: wasn't supposed to fail. expected value: %f, got error: %s", st.input, st.wants, err)
+			t.Errorf("%s failed! expected value: %f, got error: %s", st.input, st.wants, err)
 		} else if !errors.Is(err, st.expErr) {
-			t.Errorf("%s failed with unexpected error: expected error: %s; got error: %s", st.input, st.expErr, err)
+			t.Errorf("%s failed with unexpected error! expected error: %s; got error: %s", st.input, st.expErr, err)
 		}
 	}
 	if st.shouldFail {
@@ -39,7 +39,7 @@ func TestParser_PurifyInput(t *testing.T) {
 	}
 
 	for _, st := range subtests {
-		res := p.PurifyInput(st.input)
+		res := p.purifyInput(st.input)
 		if res != st.expects {
 			t.Errorf("purifying input %s failed, expected %s, got %s", st.input, st.expects, res)
 		}
@@ -70,9 +70,41 @@ func TestOperationsWithParenthesis(t *testing.T) {
 	}
 }
 
+func TestModuleOperator(t *testing.T) {
+	subtests := []struct {
+		input   string
+		expects float64
+	}{
+		{"5 % 2", 1},
+		{"50*20 % 5", 0},
+		{"50 * 20 % 3", 1},
+		{"50 % 20 * 3", 30},
+	}
+
+	for _, st := range subtests {
+		res, _ := p.Eval(st.input)
+		if res != st.expects {
+			t.Errorf("modulo operation %s failed, expected %f, got %f", st.input, st.expects, res)
+		}
+	}
+}
+
+func TestPowerOperator(t *testing.T) {
+	subTests := []subtest{
+		{"2 ** 2", 4, false, nil},
+		{"2 ** 5", 32, false, nil},
+		{"5 ** 5", 3125, false, nil},
+	}
+
+	for _, st := range subTests {
+		t.Run(st.input, st.run)
+	}
+}
+
 func TestInvalidOperations(t *testing.T) {
 	subTests := []subtest{
-		{"5 / 0", 0, true, ErrInvalidInput},
+		{"5 / 0", 0, true, nil},
+		{"6 - m", 0, true, ErrInvalidInput},
 	}
 
 	for _, st := range subTests {
