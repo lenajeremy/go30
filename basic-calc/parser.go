@@ -4,12 +4,28 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 type Parser struct{}
 
-func (p *Parser) Parse(expression string) (Stack[float64], error) {
-	return parseStartEnd(expression, 0, len(expression)-1)
+func NewParser() *Parser {
+	return new(Parser)
+}
+
+func (p *Parser) PurifyInput(original string) string {
+	input := strings.Trim(original, "\n")               // remove the trailing newline character
+	input = strings.Join(strings.Split(input, " "), "") // remove whitespace characters
+	return input
+}
+
+func (p *Parser) Eval(expression string) (float64, error) {
+	expression = p.PurifyInput(expression)
+	s, err := parseStartEnd(expression, 0, len(expression)-1)
+	if err != nil {
+		return 0, err
+	}
+	return sum(s), nil
 }
 
 func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
@@ -74,6 +90,7 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 				if (ch == '*' || ch == '/') && stack.Peek() == nil && curr == 0 {
 					return stack, fmt.Errorf("%s: invalid left value for division/multiplication operations", ErrInvalidInput.Error())
 				}
+
 				if curr != 0 {
 					updateStack(&stack, curr, prevSign)
 					curr = 0
@@ -142,6 +159,10 @@ func In[T comparable](m map[T]bool, v T) bool {
 	return ok
 }
 
-func NewParser() *Parser {
-	return new(Parser)
+func sum[T Ordered](stack Stack[T]) T {
+	var res T
+	for _, v := range stack.values {
+		res += v
+	}
+	return res
 }

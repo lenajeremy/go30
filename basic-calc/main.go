@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 var (
@@ -38,16 +37,15 @@ func main() {
 			e.Encode(res)
 		}
 
-		input := strings.Trim(originalInput, "\n")          // remove the trailing newline character
-		input = strings.Join(strings.Split(input, " "), "") // remove whitespace characters
+		input := p.PurifyInput(originalInput)
 
-		if value, err := p.Parse(input); err != nil {
+		if value, err := p.Eval(input); err != nil {
 			status = 400
 			res := httpresponse{Err: err.Error(), Status: status, Data: nil}
 			e.Encode(res)
 		} else {
 			status = 200
-			v := fmt.Sprintf("%s = %.2f", originalInput, sum(value))
+			v := fmt.Sprintf("%s = %.2f", originalInput, value)
 			res := httpresponse{Err: "", Status: status, Data: v}
 			e.Encode(res)
 		}
@@ -56,14 +54,6 @@ func main() {
 	http.HandleFunc("/calculate", calculatorHandler)
 	fmt.Println("running on port 8080")
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
-}
-
-func sum[T Ordered](stack Stack[T]) T {
-	var res T
-	for _, v := range stack.values {
-		res += v
-	}
-	return res
 }
 
 /*
