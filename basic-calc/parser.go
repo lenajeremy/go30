@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -57,9 +56,26 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 		')': true,
 	}
 
+	var functions = map[string]bool{
+		"sin":   true,
+		"cos":   true,
+		"tan":   true,
+		"pow":   true,
+		"log":   true,
+		"log10": true,
+		"ln":    true,
+		"sqrt":  true,
+		"cbrt":  true,
+	}
+
+	// insert all the keywords into the trie for easy search
+	var trie = NewTrie()
+	for k := range functions {
+		trie.Insert(k)
+	}
+
 	for _, ch := range expression {
-		if !(In(digits, ch) || In(signs, ch) || In(paren, ch)) {
-			errors.Join()
+		if !(In(digits, ch) || In(signs, ch) || In(paren, ch) || (ch >= 97 && ch < 123)) {
 			return stack, fmt.Errorf("invalid character: '%c'", ch)
 		}
 	}
@@ -68,7 +84,9 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 	var curr float64
 	var hasDecimal bool
 	var decimalPlaces int
-	var prevSign = '+'
+	var prevSign = "+"
+	var kw string
+	var kwValid bool
 
 	for i := start; i <= end; i++ {
 		ch := rune(expression[i])
@@ -102,10 +120,10 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 				if ch == '*' && i != end && rune(expression[i+1]) == '*' {
 					fmt.Println(i, expression, curr, stack)
 					// we have a ** operator
-					prevSign = 'e'
+					prevSign = "**"
 					i += 1
 				} else {
-					prevSign = ch
+					prevSign = string(ch)
 				}
 			}
 		} else if ch == '(' {
@@ -126,6 +144,10 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 					}
 
 					s := sum(res)
+					if kwValid {
+						prevSign = kw
+						kw = ""
+					}
 					updateStack(&stack, s, prevSign)
 					i = j
 					break closingParenFinder
@@ -136,6 +158,10 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 
 		} else if ch == ')' {
 			return stack, fmt.Errorf("%s: closing parenthesis found at index %d without an opening parenthesis", ErrInvalidInput.Error(), i)
+		} else {
+			kw += string(ch)
+			kwValid = In(functions, kw) && expression[i+1] == '('
+			println(trie.Has(kw), string(ch))
 		}
 
 		if i == end && curr > 0 {
@@ -146,31 +172,48 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 	return stack, nil
 }
 
-func updateStack(stack *Stack[float64], curr float64, sign rune) {
-	if sign == '+' {
+func updateStack(stack *Stack[float64], curr float64, sign string) {
+	fmt.Println(sign, curr)
+	if sign == "+" {
 		stack.Push(curr)
-	} else if sign == '-' {
+	} else if sign == "-" {
 		stack.Push(-curr)
-	} else if sign == '*' {
+	} else if sign == "*" {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(*last * curr)
 		}
-	} else if sign == '/' {
+	} else if sign == "/" {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(*last / curr)
 		}
-	} else if sign == '%' {
+	} else if sign == "%" {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(math.Mod(*last, curr))
 		}
-	} else if sign == 'e' {
+	} else if sign == "**" {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(math.Pow(*last, curr))
 		}
+	} else if sign == "sin" {
+		stack.Push(math.Sin(curr))
+	} else if sign == "cos" {
+		stack.Push(math.Cos(curr))
+	} else if sign == "tan" {
+		stack.Push(math.Tan(curr))
+	} else if sign == "ln" || sign == "log" {
+		stack.Push(math.Log(curr))
+	} else if sign == "log10" {
+		stack.Push(math.Log10(curr))
+	} else if sign == "log2" {
+		stack.Push(math.Log2(curr))
+	} else if sign == "sqrt" {
+		stack.Push(math.Sqrt(curr))
+	} else if sign == "cbrt" {
+		stack.Push(math.Cbrt(curr))
 	}
 }
 

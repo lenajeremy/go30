@@ -68,8 +68,11 @@ HTTP SERVER
 MAIN CALCULATOR
 ---------------
 1. Adding support for parenthesis. So that parenthesis are considered valid characters (DONE✅)
-2. Adding support for slightly complex operators like "**" (power) and "%" (modulo).
+2. Adding support for slightly complex operators like "**" (power) and "%" (modulo). (DONE✅)
 3. Add support for mathematical computations like sin(x), cos(x), tan(x)
-   as well as custom operators like pow(x, y), sqrt(x), cbrt(x) and maybe nroot(x, n).
-4. Add support definition of custom equations.
+   as well as custom operators like pow(x, y), sqrt(x), cbrt(x) and maybe nroot(x, n). (DONE✅)
+I did this for the single paremeter functions like sin, cos, sqrt, cbrt, etc... however,
+multi-parametric functions like pow(x, y), nroot(x, n) might be too much of a challenge. I'd leave
+this for when I'm creating an actual language
+4. Add support definition of custom equations. (this too)
 */

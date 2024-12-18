@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -100,6 +101,18 @@ func TestPowerOperator(t *testing.T) {
 	for _, st := range subTests {
 		t.Run(st.input, st.run)
 	}
+}
+
+func TestFunctionExpressions(t *testing.T) {
+	exp := "sqrt(7.3890560989)"
+	res, err := p.Eval(exp)
+	if err != nil {
+		t.Errorf("error while evaluating %s! error: %s", exp, err)
+	}
+	if res != 2.7182818285 {
+		t.Errorf("incorrect values")
+	}
+	fmt.Println(res)
 }
 
 func TestInvalidOperations(t *testing.T) {
