@@ -99,7 +99,14 @@ func parseStartEnd(expression string, start, end int) (Stack[float64], error) {
 					curr = 0
 				}
 
-				prevSign = ch
+				if ch == '*' && i != end && rune(expression[i+1]) == '*' {
+					fmt.Println(i, expression, curr, stack)
+					// we have a ** operator
+					prevSign = 'e'
+					i += 1
+				} else {
+					prevSign = ch
+				}
 			}
 		} else if ch == '(' {
 			open := 0
@@ -158,6 +165,11 @@ func updateStack(stack *Stack[float64], curr float64, sign rune) {
 		last := stack.Pop()
 		if last != nil {
 			stack.Push(math.Mod(*last, curr))
+		}
+	} else if sign == 'e' {
+		last := stack.Pop()
+		if last != nil {
+			stack.Push(math.Pow(*last, curr))
 		}
 	}
 }

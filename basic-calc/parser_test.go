@@ -70,7 +70,7 @@ func TestOperationsWithParenthesis(t *testing.T) {
 	}
 }
 
-func TestModuleOperator(t *testing.T) {
+func TestModuloOperator(t *testing.T) {
 	subtests := []struct {
 		input   string
 		expects float64
@@ -94,6 +94,7 @@ func TestPowerOperator(t *testing.T) {
 		{"2 ** 2", 4, false, nil},
 		{"2 ** 5", 32, false, nil},
 		{"5 ** 5", 3125, false, nil},
+		{"5 ** (2 * 2 + (3 ** 2))", 1220703125, false, nil},
 	}
 
 	for _, st := range subTests {
