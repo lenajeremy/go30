@@ -63,6 +63,12 @@ func TestStackPop(t *testing.T) {
 		t.Errorf("popped and got the wrong values; expected %d, got %d", last, top)
 	}
 	checkStackTop(t, s, 5)
+
+	s = Stack[int]{}
+	top = s.Pop()
+	if top != nil {
+		t.Errorf("popping from an empty stack should return an error. expected %v, got %v", nil, top)
+	}
 }
 
 func TestStackPeek(t *testing.T) {
